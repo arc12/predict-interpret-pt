@@ -162,17 +162,6 @@ def create_dash(server, url_rule, url_base_pathname):
         # examples_uuids = list(examples["data"])
         # output.append(examples_uuids)
 
-        if core.record_activity_container is not None:
-            # add uuid and tag to qry. take name and spec id from vars.
-            # display in returned order, but only the first for each session id
-            qry = \
-            """SELECT c.rec_uuid, c.interpretation, c.session_id, c._ts FROM c
-            WHERE c.plaything_name = "predict-interpret" AND c.action = "submit" AND c.specification_id = "test1"
-            ORDER BY c._ts DESC
-            """
-            a = core.record_activity_container.query_items(qry, max_item_count=100, enable_cross_partition_query=True)
-            print(list(a))
-
         return output
 
     @app.callback(

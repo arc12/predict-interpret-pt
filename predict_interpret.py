@@ -29,7 +29,14 @@ class Langstrings(LangstringsBase):
         },
         "MENU_INTERPRET": {
             "en": "Interpret"
+        },
+        "MENU_REVIEW": {
+            "en": "Review"
+        },
+        "NO_DATA": {
+            "en": "No data found."
         }
+        # SEE ALSO pg_shared.text_utilities
     }
 
 # The menu is only shown if menu=1 in query-string AND only for specific views. Generally make the menu contain all views it is coded for
@@ -40,6 +47,7 @@ class Langstrings(LangstringsBase):
 # This defines the default order and the maximum scope of views in the meny. A plaything specification may override.
 menu = {
     "interpret": "MENU_INTERPRET",
+    "review": "MENU_REVIEW",
     "about": "MENU_ABOUT"
 }
 
