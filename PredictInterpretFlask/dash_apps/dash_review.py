@@ -2,6 +2,8 @@
 
 from pg_shared.dash_utils import create_dash_app_util
 from pg_shared.visualisation_builders import shap_force_plot
+from pg_shared.text_utilities import ago_text
+
 from predict_interpret import core, menu, Langstrings
 from flask import session
 
@@ -86,26 +88,6 @@ def create_dash(server, url_rule, url_base_pathname):
         triggered_by = callback_context.triggered_id
         if triggered_by is None:
             raise PreventUpdate
-
-        # delta, action = (-1, "previous") if callback_context.triggered_id == "prev_button" else (1, "next")
-        
-        # specification_id = pathname.split('/')[-1]
-        # tag = None
-        # if len(querystring) > 0:
-        #     for param, value in [pv.split('=') for pv in querystring[1:].split("&")]:
-        #         if param == "tag":
-        #             tag = value
-        #             break
-        
-        # specification_id = pathname.split('/')[-1]
-
-        # activity = {"action": action, "rec_uuid": rec_uuids[rec_ix % len(rec_uuids)]}
-
-        # # TODO find a method for capturing the initial referrer. (the referrer in a callback IS the page itself)
-        # core.record_activity(view_name, specification_id, session,
-        #                      activity=activity,
-        #                      referrer="(callback)",
-        #                      tag=tag)
         
         if triggered_by == "slider":
             rec_ix = slider - 1  # UI uses 1-based index
@@ -208,23 +190,34 @@ def create_dash(server, url_rule, url_base_pathname):
                 if sid not in session_hits:
                     interp_text = interp["interpretation"].strip()
                     if len(interp_text) > 0:
-                        # session_hits.add(sid)  # TODO reinstate - removed for ease of testing
-                        from pg_shared.text_utilities import ago_text
-                        ta = dcc.Textarea(id=f"ta_{sid}", value=interp_text, readOnly=True, style={"font-size": "10pt", "margin-top": "12px", "width": "100%", "height": 100})
-                        info = html.Div(
-                            [
-                                html.B(interp["user_tag"], style={"margin-right": "4px"}),
-                                html.Label(ago_text(interp["_ts"], spec.lang))
-                            ], className="d-flex justify-content-end"
+                        session_hits.add(sid)  # TODO reinstate - removed for ease of testing
+                        # ta = dcc.Textarea(id=f"ta_{sid}", value=interp_text, readOnly=True, style={"font-size": "10pt", "margin-top": "12px", "width": "100%", "height": 100})
+                        intrepretations.append(
+                            html.Div(
+                                [
+                                    html.Div(
+                                        [html.P(t) for t in interp_text.split("\n")], className="card", style={"font-size": "10pt"}
+                                    ),
+                                    html.Div(
+                                        [
+                                            html.B(interp["user_tag"], style={"margin-right": "4px"}),
+                                            html.Label(ago_text(interp["_ts"], spec.lang))
+                                        ], className="d-flex justify-content-end"
+                                    )
+                                ], className="mt-3", style={"width": "97%", "margin": "auto"}
+                            )
                         )
-                        intrepretations.append(html.Div(children=[ta, info], style={"width": "95%", "margin": "auto"}))
         else:
             pass  # add logging?
 
-        if len(intrepretations) == 0:
-            intrepretations = langstrings.get("NO_DATA")
+        # TODO find a method for capturing the initial referrer. (the referrer in a callback IS the page itself)
+        core.record_activity(view_name, specification_id, session,
+                             activity={"rec_uuid": uuid, "rec_ix": rec_ix, "n_interpretations": len(intrepretations)},
+                             referrer="(callback)",
+                             tag=tag)
 
-        return [examples_uuids, fig, intrepretations, rec_ix + 1, len(examples_uuids)]
+        return [examples_uuids, fig, langstrings.get("NO_DATA")
+                if len(intrepretations) == 0 else intrepretations, rec_ix + 1, len(examples_uuids)]
 
 
     return app.server
