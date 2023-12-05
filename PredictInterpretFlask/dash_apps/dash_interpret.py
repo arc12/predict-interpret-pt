@@ -22,41 +22,50 @@ def create_dash(server, url_rule, url_base_pathname):
 
     app.layout = html.Div([
         dcc.Location(id="location"),
+        dcc.Store(id="rec_uuids", storage_type="memory"),
+        dcc.Store(id="rec_ix", data=0, storage_type="local"),
+
         html.Div(id="menu"),
 
         html.Div(
             [
                 html.H1(id="heading", className="header-title")
-            ],
-            className="header"),
+            ]
+            # className="header"
+            ),
 
-        html.Div(
-            [
-                # html.Label("Record:", id="record_label"),                
-                dcc.Store(id="rec_uuids", storage_type="memory"),
-                dcc.Store(id="rec_ix", data=0, storage_type="local")
-            ],
-            style={"display": "flex"}
-        ),
 
         html.Div(
             dcc.Loading(
                 dcc.Graph(id="force_plot", config={'displayModeBar': False}),
                 type="circle"
             )
-        ),
-
-        html.Div(
-            dcc.Textarea(id="interpretation", style={'width': '100%', 'height': 300})
+            # style={"display": "flex"}
         ),
 
         html.Div(
             [
-                html.Button(id="skip_button"),
-                html.Label(id="ut_label"),
-                dcc.Input(id="ut_value", type="text"),
-                html.Button(id="submit_button")
+                html.H2(id="input_prompt"),
+                dcc.Textarea(id="interpretation", style={'width': '100%', 'height': 300})
             ]
+        ),
+
+        html.Div(
+            [
+                html.Div(
+                    [
+                        html.Label(id="ut_label"),
+                        dcc.Input(id="ut_value", type="text", className="mx-2")
+                    ], className="mt-2"
+                ),
+                html.Div(
+                    [
+                        html.Button(id="skip_button", className="btn btn-secondary mx-2 mt-1"),
+                        html.Button(id="submit_button", className="btn btn-secondary mt-1")
+                    ]
+                )
+            ],
+            className="d-flex justify-content-end"
         )
     ],
     className="wrapper"
@@ -64,7 +73,8 @@ def create_dash(server, url_rule, url_base_pathname):
 
     @app.callback(
             [
-                Output("rec_ix", "data")
+                Output("rec_ix", "data"),
+                Output("interpretation", "value")
             ],
             [
                 Input("submit_button", "n_clicks"),
@@ -94,7 +104,7 @@ def create_dash(server, url_rule, url_base_pathname):
                     break
         
         specification_id = pathname.split('/')[-1]
-        spec = core.get_specification(specification_id)
+        # spec = core.get_specification(specification_id)
         # langstrings = Langstrings(spec.lang)
 
         activity = {"action": action, "rec_uuid": rec_uuids[rec_ix % len(rec_uuids)]}
@@ -109,12 +119,13 @@ def create_dash(server, url_rule, url_base_pathname):
         
         rec_ix = (rec_ix + 1) % len(rec_uuids)
 
-        return [rec_ix]
+        return [rec_ix, ""]
 
     @app.callback(
         [
             Output("menu", "children"),
             Output("heading", "children"),
+            Output("input_prompt", "children"),
             Output("skip_button", "children"),
             Output("ut_label", "children"),
             Output("submit_button", "children"),
@@ -139,16 +150,28 @@ def create_dash(server, url_rule, url_base_pathname):
             output = [
                 menu_children,
                 spec.detail.get("prediction_title", ""),
+                spec.detail.get("input_prompt", ""),
                 langstrings.get("SKIP"),
                 langstrings.get("USER_TAG"),
                 langstrings.get("SUBMIT")
                 ]
         else:
-            output = [no_update] * 5
+            output = [no_update] * 6
 
         # examples = spec.load_asset_json("examples")
         # examples_uuids = list(examples["data"])
-        # output.append(examples_uuids) 
+        # output.append(examples_uuids)
+
+        if core.record_activity_container is not None:
+            # add uuid and tag to qry. take name and spec id from vars.
+            # display in returned order, but only the first for each session id
+            qry = \
+            """SELECT c.rec_uuid, c.interpretation, c.session_id, c._ts FROM c
+            WHERE c.plaything_name = "predict-interpret" AND c.action = "submit" AND c.specification_id = "test1"
+            ORDER BY c._ts DESC
+            """
+            a = core.record_activity_container.query_items(qry, max_item_count=100, enable_cross_partition_query=True)
+            print(list(a))
 
         return output
 
@@ -173,8 +196,8 @@ def create_dash(server, url_rule, url_base_pathname):
         spec = core.get_specification(specification_id)
         langstrings = Langstrings(spec.lang)    
 
+        # although putting all examples in one file makes for redundant reading, its only a small file and its more tidy in the config.
         examples = spec.load_asset_json("examples")
-
         attr_index = examples["attr_index"]
         attr_names = examples["attr_names"]
         examples_uuids = list(examples["data"])
@@ -182,7 +205,7 @@ def create_dash(server, url_rule, url_base_pathname):
         fig = shap_force_plot(attr_index, attr_names, examples["data"][examples_uuids[rec_ix % len(examples_uuids)]],
                               title=spec.detail.get("prediction_title", "") + f" - {langstrings.get('RECORD')} #{rec_ix + 1}",
                               x_axis_text=langstrings.get("PROB_PC"),
-                              y_axis_text=langstrings.get("ATTRIBUTE")
+                              y_axis_text=None  # langstrings.get("ATTRIBUTE")
                               )
 
         return [examples_uuids, fig]
