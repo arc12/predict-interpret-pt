@@ -179,7 +179,7 @@ def create_dash(server, url_rule, url_base_pathname):
         if core.record_activity_container is not None:
             tag_clause = "IS_NULL(c.tag)" if tag is None else f"c.tag = '{tag}'"
             # display in returned order, but only the first for each session id
-            qry = "SELECT c.user_tag, c.interpretation, c.session_id, c._ts FROM c " \
+            qry = "SELECT c.user_tag, c.persona, c.interpretation, c.session_id, c._ts FROM c " \
                   "WHERE c.plaything_name = 'predict-interpret' AND c.action = 'submit' AND "\
                   f"c.specification_id = '{specification_id}' AND c.rec_uuid = '{uuid}' AND {tag_clause} "\
                   "AND NOT IS_NULL(c.interpretation) ORDER BY c._ts DESC"
@@ -192,17 +192,20 @@ def create_dash(server, url_rule, url_base_pathname):
                     if len(interp_text) > 0:
                         session_hits.add(sid)  # TODO reinstate - removed for ease of testing
                         # ta = dcc.Textarea(id=f"ta_{sid}", value=interp_text, readOnly=True, style={"font-size": "10pt", "margin-top": "12px", "width": "100%", "height": 100})
+                        attribution = [
+                            html.B(interp["user_tag"], style={"margin-right": "4px"}),
+                            html.Label(ago_text(interp["_ts"], spec.lang))
+                        ]
+                        persona = interp.get("persona", None)
+                        if persona is not None:
+                            attribution = [html.I(f"{langstrings.get('PERSONA')} {persona}", style={"margin-right": "10px"})] + attribution
                         intrepretations.append(
                             html.Div(
                                 [
                                     html.Div(
                                         [html.P(t) for t in interp_text.split("\n")], className="card", style={"font-size": "10pt"}
                                     ),
-                                    html.Div(
-                                        [
-                                            html.B(interp["user_tag"], style={"margin-right": "4px"}),
-                                            html.Label(ago_text(interp["_ts"], spec.lang))
-                                        ], className="d-flex justify-content-end"
+                                    html.Div(attribution, className="d-flex justify-content-end"
                                     )
                                 ], className="mt-3", style={"width": "97%", "margin": "auto"}
                             )

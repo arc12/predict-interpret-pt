@@ -52,10 +52,11 @@ def create_dash(server, url_rule, url_base_pathname):
 
         html.Div(
             [
+                html.Div([dcc.Input(id="persona", type="hidden", value=None)], id="persona_div", className="mt-2 mx-2 d-flex justify-content-end"),
                 html.Div(
                     [
                         html.Label(id="ut_label"),
-                        dcc.Input(id="ut_value", type="text", className="mx-2")
+                        dcc.Input(id="ut_value", type="text", size=8, className="mx-2")
                     ], className="mt-2"
                 ),
                 html.Div(
@@ -86,10 +87,11 @@ def create_dash(server, url_rule, url_base_pathname):
                 State("rec_ix", "data"),
                 State("rec_uuids", "data"),
                 State("ut_value", "value"),
-                State("interpretation", "value")
+                State("interpretation", "value"),
+                State("persona", "value")
             ]
     )
-    def submit_btn(n_clicks_submit, n_clicks_skip, pathname, querystring, rec_ix, rec_uuids, ut_value, interpretation):
+    def submit_btn(n_clicks_submit, n_clicks_skip, pathname, querystring, rec_ix, rec_uuids, ut_value, interpretation, persona):
         if n_clicks_submit is None and n_clicks_skip is None:
             raise PreventUpdate
 
@@ -110,6 +112,8 @@ def create_dash(server, url_rule, url_base_pathname):
         activity = {"action": action, "rec_uuid": rec_uuids[rec_ix % len(rec_uuids)]}
         if action == "submit":
             activity.update({"user_tag": ut_value, "interpretation": interpretation})
+            if persona is not None:
+                activity["persona"] = persona
 
         # TODO find a method for capturing the initial referrer. (the referrer in a callback IS the page itself)
         core.record_activity(view_name, specification_id, session,
@@ -126,6 +130,7 @@ def create_dash(server, url_rule, url_base_pathname):
             Output("menu", "children"),
             Output("heading", "children"),
             Output("input_prompt", "children"),
+            Output("persona_div", "children"),
             Output("skip_button", "children"),
             Output("ut_label", "children"),
             Output("submit_button", "children"),
@@ -143,20 +148,30 @@ def create_dash(server, url_rule, url_base_pathname):
         specification_id = pathname.split('/')[-1]
         spec = core.get_specification(specification_id)
         langstrings = Langstrings(spec.lang)
+        personas = spec.detail.get("personas", [])
+        personas = [] if personas is None else personas
     
         if callback_context.triggered_id == "location":
             # initial load
             menu_children = spec.make_menu(menu, langstrings, core.plaything_root, view_name, query_string=querystring, for_dash=True)
+            if len(personas) == 0:
+                persona_div = no_update  # leave default hidden field with value None for the callback handler
+            else:
+                persona_div = [
+                    html.Label(langstrings.get("PERSONA"), className="mx-1"),
+                    dcc.Dropdown(personas, id="persona", value=personas[0], clearable=False, searchable=False, style={"width": "150px"})
+                ]
             output = [
                 menu_children,
                 spec.detail.get("prediction_title", ""),
                 spec.detail.get("input_prompt", ""),
+                persona_div,
                 langstrings.get("SKIP"),
                 langstrings.get("USER_TAG"),
                 langstrings.get("SUBMIT")
                 ]
         else:
-            output = [no_update] * 6
+            output = [no_update] * 7
 
         # examples = spec.load_asset_json("examples")
         # examples_uuids = list(examples["data"])

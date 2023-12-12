@@ -18,6 +18,9 @@ class Langstrings(LangstringsBase):
         "RECORD": {
             "en": "record"
         },
+        "PERSONA": {
+            "en": "Persona:"
+        },
         "SKIP": {
             "en": "Skip"
         },
