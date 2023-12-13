@@ -56,8 +56,8 @@ def create_dash(server, url_rule, url_base_pathname):
                 html.Div([dcc.Input(id="persona", type="hidden", value=None)], id="persona_div", className="mt-2 mx-2 d-flex justify-content-end"),
                 html.Div(
                     [
-                        html.Label(id="ut_label"),
-                        dcc.Input(id="ut_value", type="text", size=8, className="mx-2")
+                        html.Label(id="ut_label", className="mx-1"),
+                        dcc.Input(id="ut_value", type="text", size=8)
                     ], className="mt-2"
                 )
             ],
