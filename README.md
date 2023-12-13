@@ -16,6 +16,7 @@ Responses shown in "review" are filtered according to the tag which is in effect
 
 ### "detail"
 - prediction_title [simple text]: the objective of the prediction, used as a title.
+- notes [optional, simple text]: some text which will be shown under the title, shown as a single paragraph.
 - instance_name [simple text]: the kind of entity which is the subject. This may ba used as a place-holder in the "about" markdown file (see below).
 - input_prompt [simple text]: the prompt which appears over the user response box.
 - personas [optional, list]: a list of personas which the respondant can select when making a response. If omitted (or null or an empty list) then personas will not be presented. Otherwise, a drop-down list will be shown. There is no restriction on the values which may be used here. Example: "personas": ["Teacher", "Student"]

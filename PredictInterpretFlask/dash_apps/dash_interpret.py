@@ -29,7 +29,8 @@ def create_dash(server, url_rule, url_base_pathname):
 
         html.Div(
             [
-                html.H1(id="heading", className="header-title")
+                html.H1(id="heading", className="header-title"),
+                html.P(id="notes")
             ]
             # className="header"
             ),
@@ -129,6 +130,7 @@ def create_dash(server, url_rule, url_base_pathname):
         [
             Output("menu", "children"),
             Output("heading", "children"),
+            Output("notes", "children"),
             Output("input_prompt", "children"),
             Output("persona_div", "children"),
             Output("skip_button", "children"),
@@ -164,6 +166,7 @@ def create_dash(server, url_rule, url_base_pathname):
             output = [
                 menu_children,
                 spec.detail.get("prediction_title", ""),
+                spec.detail.get("notes", None),
                 spec.detail.get("input_prompt", ""),
                 persona_div,
                 langstrings.get("SKIP"),
@@ -171,7 +174,7 @@ def create_dash(server, url_rule, url_base_pathname):
                 langstrings.get("SUBMIT")
                 ]
         else:
-            output = [no_update] * 7
+            output = [no_update] * 8
 
         # examples = spec.load_asset_json("examples")
         # examples_uuids = list(examples["data"])
