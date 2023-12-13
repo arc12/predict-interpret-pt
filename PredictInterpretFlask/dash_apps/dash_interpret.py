@@ -47,7 +47,7 @@ def create_dash(server, url_rule, url_base_pathname):
         html.Div(
             [
                 html.H2(id="input_prompt"),
-                dcc.Textarea(id="interpretation", style={'width': '100%', 'height': 300})
+                dcc.Textarea(id="interpretation", style={'width': '100%', 'height': 200})
             ]
         ),
 
@@ -59,16 +59,17 @@ def create_dash(server, url_rule, url_base_pathname):
                         html.Label(id="ut_label"),
                         dcc.Input(id="ut_value", type="text", size=8, className="mx-2")
                     ], className="mt-2"
-                ),
-                html.Div(
-                    [
-                        html.Button(id="skip_button", className="btn btn-secondary mx-2 mt-1"),
-                        html.Button(id="submit_button", className="btn btn-secondary mt-1")
-                    ]
                 )
             ],
             className="d-flex justify-content-end"
-        )
+        ),
+        html.Div(
+                    [
+                        html.Button(id="skip_button", className="btn btn-secondary mx-2 mt-1"),
+                        html.Button(id="submit_button", className="btn btn-secondary mt-1")
+                    ],
+                    className="d-flex justify-content-end"
+                )
     ],
     className="wrapper"
     )
@@ -160,7 +161,7 @@ def create_dash(server, url_rule, url_base_pathname):
                 persona_div = no_update  # leave default hidden field with value None for the callback handler
             else:
                 persona_div = [
-                    html.Label(langstrings.get("PERSONA"), className="mx-1"),
+                    html.Label(langstrings.get("PERSONA"), className="mx-1 mt-1"),
                     dcc.Dropdown(personas, id="persona", value=personas[0], clearable=False, searchable=False, style={"width": "150px"})
                 ]
             output = [
@@ -212,7 +213,8 @@ def create_dash(server, url_rule, url_base_pathname):
         fig = shap_force_plot(attr_index, attr_names, examples["data"][examples_uuids[rec_ix % len(examples_uuids)]],
                               title=spec.detail.get("prediction_title", "") + f" - {langstrings.get('RECORD')} #{rec_ix + 1}",
                               x_axis_text=langstrings.get("PROB_PC"),
-                              y_axis_text=None  # langstrings.get("ATTRIBUTE")
+                              y_axis_text=None,  # langstrings.get("ATTRIBUTE")
+                              height=50 * (1 + len(attr_index))
                               )
 
         return [examples_uuids, fig]

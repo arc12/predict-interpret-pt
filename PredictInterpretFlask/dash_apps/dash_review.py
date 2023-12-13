@@ -172,7 +172,8 @@ def create_dash(server, url_rule, url_base_pathname):
         fig = shap_force_plot(attr_index, attr_names, examples["data"][uuid],
                               title=spec.detail.get("prediction_title", "") + f" - {langstrings.get('RECORD')} #{rec_ix + 1}",
                               x_axis_text=langstrings.get("PROB_PC"),
-                              y_axis_text=None  # langstrings.get("ATTRIBUTE")
+                              y_axis_text=None,  # langstrings.get("ATTRIBUTE")
+                              height=50 * (1 + len(attr_index))
                               )
         
         intrepretations = list()
